@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+<!-- Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *      
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License
+-->
+        <ModulePrefs title="Hangout Starter">
+                <Require feature="rpc" />
+                <Require feature="views"/>
+        </ModulePrefs>
+        <Content type="html"><![CDATA[
+        <!DOCTYPE html>
+     
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro' rel='stylesheet' type='text/css'></link>
+<link href='//rawgit.com/jcambre/CS247-P4/mod/style.css' rel='stylesheet' type='text/css'></link>
+<script src='//cdn.firebase.com/js/client/1.0.6/firebase.js'></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+<script src="//code.highcharts.com/highcharts.js"></script>
+<script src="//code.highcharts.com/highcharts-more.js"></script>
+<script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src='//rawgit.com/jcambre/CS247-P4/moderator/firebase_setup.js'></script>
+<script src='//rawgit.com/jcambre/CS247-P4/mod/turn-taking.js'></script>
+<script src='//rawgit.com/jcambre/CS247-P4/mod/breakout.js'></script>
+
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+
+<html>
+<div id="container" style="position:relative; width:100%;">
+
+
+
+<!--   <div id="show_panel">
+    <span id="show_panel_label" style="font-size: 10pt;">Show Think-Pair-Share&#9660;</span>
+  </div> -->
+  <div id="panel_container_wrapper" style="overflow:scroll; position:relative; border-right: 1px solid #eeeeee;">
+    <div id="panel_container">
+      <nav class="navbar navbar-default navbar-fixed-top" role="navigation" style="width: 380px; margin-bottom: 0px;">
+        <div class="container" style="width: 380px; padding-top:7px;">
+          <center><span style="font-size: 18pt; font-weight: 200;">Hangout Moderator</span></center>
+        </div>
+      </nav>
+      
+      <div id="test"> test btext by vineet </div>
+      
+      <div id="is_instructor_banner" style="width: 380px; z-index: 1; background-color: #5bc0de; position:fixed; top:50px; left:0px; padding: 3px; display:none;">
+        <center><span style="color: #ffffff; font-weight: 600;">You are the INSTRUCTOR of this discussion.</span></center>
+      </div>
+      <!-- <a id="hide_panel" style="float:right; font-size:14pt; padding: 5px; text-decoration:none; color:#00000; cursor: pointer;" title="Hide Participation Metrics">&times;</a> -->
+      <div id="visualization_container" style="padding-top: 70px;">
+
+        <p id="instructions" style="display: none;">In a moment, your instructor will begin the discussion. First, you will be asked to <b>think</b> individually about a short prompt. 
+        Then, you will be automatically <b>paired</b> with another student to discuss the same prompt. Finally, the discussion will return to the entire group, and everyone will have 
+        a chance to <b>share</b> what they discussed with their partners.</p>
+        
+        <div id="instructor_instructions" style="display:none;">
+          <div class="initial_instructions">
+            <div id='tps_buttons'>
+              <div id="timing-selectors">
+                
+                <form role="form">
+                  <p class="lead" style="border-bottom: 1px solid #eeeeee;">1. Pick a prompt</p>
+                  <span style="font-size: 10pt;">What would you like students to discuss?</span>
+                  <div class="form-group">
+                    <textarea class="form-control" cols="50" id="question_input" maxlength="140" placeholder="e.g. What has been your favorite class at Stanford and why?" rows="3" required></textarea>
+                  </div>
+
+                  <p class="lead" style="border-bottom: 1px solid #eeeeee;">2. Set Timings</p>
+                  <span style="font-size: 10pt;">How long would you like students to think <b>individually</b>?</span>
+                  <div class="form-group">
+                    <select id="think_select" class="form-control" required>
+                      <option value="-1" disabled selected>Select a duration</option>
+                      <option value='0'>None</option>
+                      <option value='15'>15 seconds</option>
+                      <option value='30'>30 seconds</option>
+                      <option value='45'>45 seconds</option>
+                      <option value='60'>1 minute</option>
+                    </select>
+                  </div>
+                  <span style="font-size: 10pt;">How long would you like students to discuss <b>in pairs</b>?</span>
+                  <div class="form-group">
+                    <select id="pair_select" class="form-control" required>
+                      <option value="-1" disabled selected>Select a duration</option>
+                      <option value='0'>None</option>
+                      <option value='30'>30 seconds</option>
+                      <option value='60'>1 minute</option>
+                      <option value='90'>1.5 minutes</option>
+                      <option value='120'>2 minutes</option>
+                    </select>
+                  </div>
+
+                  <p class="lead" style="border-bottom: 1px solid #eeeeee;">3. Start Discussion</p>
+                  <button type="button" class="btn btn-success disabled" id="start_tps_btn">Begin Think-Pair-Share Activity</button>
+                </form>
+
+                <!--
+                  <form action="javascript:overrideTimings()" id="timing-form">
+                    <input class="btn btn-success" type="submit" value="Start TPS">
+                  </form>
+                -->
+              </div>
+            </div>
+          </div>
+          <center><button type="button" class="btn btn-success" id="enable_intercom_btn" style="display:none;">Start speaking with participants</button>
+          <button type="button" class="btn btn-danger" id="disable_intercom_btn" style="display:none;">Stop speaking with participants</button>
+          <span class="glyphicon glyphicon-question-sign" data-toggle="tooltip" id="intercom_explanation" data-placement="bottom" title="By clicking this button, 
+          	you can override broadcast your voice to all of the participants in this Hangout, which will allow you to say something to all of the ongoing pair groups" 
+          	style="display: none; margin-left: 10px;"></span><button type="button" class="btn btn-primary" id="restart_tps_btn" style="display:none;">Restart Think-Pair-Share</button></center>
+          
+        </div>
+
+
+        <div id="tps_content_wrapper" style="display: none;">
+          <br/><br/>
+          <h4 style="display: inline-block; padding-right: 5px;">Current Phase:</h4>
+          <p class="lead" id="phase_label" style="display: inline-block;">
+            <span id="pending_participants">
+              Waiting for <span id="num_participants_needed"></span> more participants to begin the discussion!
+            </span>
+          </p>
+          <span id="phase_label_subhead"></span>
+          <div id="timer_wrapper" style="display:none;">
+            <h4 id="timer_label_heading" style="display: inline-block; padding-right: 5px;">Remaining time in this phase:</h4>
+            <span class="lead" id="timer_label"></span><br/><br/>
+          </div>
+          <div id="privacy-notice" class="alert alert-warning alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <strong>Heads up!</strong> Your instructor will be able to monitor your audio/video feeds at all times, including when he or she appears hidden to you during the Think and Pair phases, so don't do anything too embarrassing!
+          </div>
+          <hr/>
+          <div id="pair_wrapper" style="display: none;">
+            <strong>Pair groups</strong>
+            <span><br/>Click on a pair to join their conversation. The pair will be able to see and hear you until you click on a different pair or click the <i>Listen to all pairs</i> button.<br/></span>
+            <ul id="listen_all_container" class="list-unstyled">
+              <li><button id="listen_all" type="button" class="btn btn-success disabled btn-xs pair-btn" onclick="listenToAll();">Listen to all pairs</button></li>
+            </ul>
+            <ul id="pairs" class="list-unstyled">
+            </ul>
+          </div>
+        </div>
+        <div id="graph_container" style="min-width: 300px; width: 400px; max-width: 500px; left: 15px; height: 380px; margin: 0 auto; position: relative; float: right; display: none;"></div>
+
+      </div>
+    </div>
+  </div>
+  
+
+</div>
+</html>
+
+<script>
+  gapi.hangout.onApiReady.add(
+    function(eventObj) {
+      determineModerator();
+
+      //$('#hide_panel').click(function() {
+      //  hidePanel();
+      //});
+      //$('#show_panel').click(function() {
+      //  showPanel();
+      //});
+
+      // If the current participants are "administrators" (acting as instructors for the purposes of the demo), give them access to the Start/Stop discussion buttons
+      var localParticipantId = gapi.hangout.getLocalParticipant().person.id;
+      if (localParticipantId == INSTRUCTOR_ID) {
+        document.getElementById("privacy-notice").innerHTML = "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><strong>Heads up!</strong>  
+         You will be able to monitor the audio and video feeds of all students at all times, even when they are only able to see themselves and/or their discussion partner.";
+
+        $("#instructor_instructions").show();
+        $("#is_instructor_banner").show();
+        $("#panel_container_wrapper").height("120%");
+      } else {
+        hidePanel();
+      }
+
+      $('#intercom_explanation').tooltip();
+
+      $('#start_tps_btn').on('click', function() {
+        startTPS();
+      });
+      $('#restart_tps_btn').on('click', function() {
+        restartTPS();
+      });
+
+      $('#enable_intercom_btn').click(function() {
+        activateIntercom();
+      });
+      $('#disable_intercom_btn').click(function() {
+        disableIntercom();
+      });
+
+      $('#start_graph_btn').click(function() {
+        startGraphing();
+      });
+      $('#restart_graph_btn').click(function() {
+        endGraphing();
+      });
+    }
+  );
+</script>
+]]>
+</Content>
+</Module>
